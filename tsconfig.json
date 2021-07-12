@@ -1,0 +1,19 @@
+  
+{
+  "compilerOptions": {
+      "target": "ES6",
+      "module": "commonjs",
+      "moduleResolution": "Node",
+      "declaration": true,
+      "outDir": "./lib",
+      "strict": true,
+      "strictNullChecks": false,
+      "esModuleInterop": true,
+      "pretty": true,
+      "removeComments": true,
+      "skipDefaultLibCheck": true,
+      "skipLibCheck": true,
+      "typeRoots": ["node_modules/@types"]
+  },
+  "include": ["src/**/*"]
+}

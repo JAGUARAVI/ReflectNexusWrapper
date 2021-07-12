@@ -1,0 +1,24 @@
+{
+  "name": "reflect-nexus-wrapper",
+  "version": "1.0.0",
+  "description": "A client for reflect-nexus https://github.com/DevSnowflake/Nexus.",
+  "main": "lib/index.js",
+  "scripts": {
+    "lint": "eslint src --ext .ts",
+    "lint:fix": "eslint src --ext .ts --fix",
+    "test": "cd test && npx ts-node index.ts",
+    "build:check": "tsc --noEmit --incremental false",
+    "format": "prettier --write **/*.{js,ts,json,yml}",
+    "build": "npx tsc",
+    "postinstall": "npm run build"
+  },
+  "author": "AviDoesDev",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^16.3.1",
+    "@types/ws": "^7.4.6",
+    "typescript": "^4.3.5",
+    "discord.js": "^13.0.0-dev.a8984bc.1626048234"
+  },
+  "dependencies": {}
+}

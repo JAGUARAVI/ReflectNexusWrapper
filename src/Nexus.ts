@@ -136,6 +136,9 @@ class Nexus extends EventEmitter {
                     if (!player) break;
 
                     const tracks = message.d.tracks as TrackData[];
+                    tracks.map(track => {
+                        if (track.initial) player.tracks = [track, ...player.tracks];
+                    });
 
                     this.emit(Constants.Events.TRACKS_ADD, player, tracks);
                     player.emit(Constants.Events.TRACKS_ADD, tracks);
@@ -185,6 +188,8 @@ class Nexus extends EventEmitter {
                 case WSEvents.QUEUE_END: {
                     const player = this.players.get(message.d.guild_id);
                     if (!player) break;
+
+                    player.tracks = [];
 
                     this.emit(Constants.Events.QUEUE_END, player);
                     player.emit(Constants.Events.QUEUE_END);

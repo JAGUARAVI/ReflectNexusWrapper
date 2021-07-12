@@ -1,6 +1,6 @@
 {
   "name": "reflect-nexus-wrapper",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A client for reflect-nexus https://github.com/DevSnowflake/Nexus.",
   "main": "lib/index.js",
   "scripts": {
@@ -20,5 +20,22 @@
     "typescript": "^4.3.5",
     "discord.js": "^13.0.0-dev.a8984bc.1626048234"
   },
-  "dependencies": {}
+  "directories": {
+    "lib": "lib"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AviDoesDev/ReflectNexusWrapper.git"
+  },
+  "keywords": [
+    "reflect-nexus",
+    "nexus",
+    "reflect-nexus-wrapper",
+    "nexus-wrapper",
+    "nexus-client"
+  ],
+  "bugs": {
+    "url": "https://github.com/AviDoesDev/ReflectNexusWrapper/issues"
+  },
+  "homepage": "https://github.com/AviDoesDev/ReflectNexusWrapper#readme"
 }

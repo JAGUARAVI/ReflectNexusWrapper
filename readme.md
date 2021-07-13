@@ -27,11 +27,14 @@ player.play("Dua Lipa - Love Again"); // Song title
 ```
 
 ### Other methods
-```
+```ts
 // Player Methods
 
 player.play(query: string, now?: boolean)
 // Play music. now - whether you want to push the track to the first position in queue
+
+player.connect(source?: Discord.Message | Discord.Interaction, channel?: Discord.VoiceChannel)
+// Connects the player to a VoiceChannel
 
 player.pause(); // Pauses the player
 player.resume(); // Resumes the player

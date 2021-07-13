@@ -53,7 +53,7 @@ class Player extends EventEmitter {
         if (options.connect !== false) this.connect(this.source);
     }
 
-    async connect(source: Message | Interaction, voiceChannel?: VoiceChannel): Promise<void> {
+    async connect(source?: Message | Interaction, voiceChannel?: VoiceChannel): Promise<void> {
         // @ts-ignore
         if (source?.member?.voice?.channel || voiceChannel) this.voiceChannel = voiceChannel || source.member?.voice?.channel;
         // @ts-ignore
@@ -69,13 +69,13 @@ class Player extends EventEmitter {
     }
 
     async stop(): Promise<void> {
-        await this.destroySubscription();
         this.connected = false;
+        await this.destroySubscription();
     }
 
     async play(query: string, now = false): Promise<TrackData> { //todo: add search (list all tracks [max-10] and ask to pick any one)
         return new Promise(async (res, rej) => {
-            if (!this.connected) await this.connect(this.source);
+            if (!this.connected) await this.connect();
             if (!query) return rej("No query provided!");
 
             const tracks = await this.manager.search(query).then(a => a.results)

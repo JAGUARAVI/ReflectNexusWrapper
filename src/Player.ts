@@ -57,13 +57,13 @@ class Player extends EventEmitter {
         // @ts-ignore
         if (source?.member?.voice?.channel || voiceChannel) this.voiceChannel = voiceChannel || source.member?.voice?.channel;
         // @ts-ignore
-        if (source.channel) this.channel = source.channel;
+        if (source?.channel) this.channel = source.channel;
 
         if (source) this.source = source;
 
         this.subscription = await this.getSubscription();
         if (!this.subscription) this.subscription = await this.createSubscription().then(() => true).catch((e) => { throw new Error('Error connecting to the voice channel!\n' + e) })
-        
+
         this.connected = true;
         this.emit(Constants.Events.READY);
     }
@@ -193,17 +193,18 @@ class Player extends EventEmitter {
 
             this.once(Constants.Events.TRACK_START, (t: TrackData) => {
                 // @ts-ignore
-                t.requested_by = data.source.member.user.id;
+                if (data?.source?.member?.user?.id) t.requested_by = data.source.member.user.id;
                 res([t])
             });
             this.once(Constants.Events.TRACK_ADD, (t: TrackData) => {
                 // @ts-ignore
-                t.requested_by = data.source.member.user.id;
+                if (data?.source?.member?.user?.id) t.requested_by = data.source.member.user.id;
                 res([t])
             });
             this.once(Constants.Events.TRACKS_ADD, (tracks: TrackData[]) => {
                 // @ts-ignore
-                res(tracks.map(t => t.requested_by = data.source.member.user.id))
+                if (data?.source?.member?.user?.id) tracks = tracks.map(t => t.requested_by = data.source.member.user.id)
+                res(tracks)
             });
             this.once(Constants.Events.TRACK_ERROR, (e) => rej(e));
         })

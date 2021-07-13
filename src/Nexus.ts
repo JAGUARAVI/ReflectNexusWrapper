@@ -55,8 +55,8 @@ class Nexus extends EventEmitter {
         });
     }
 
-    _init(): void {
-        this.connect();
+    async _init(): Promise<void> {
+        await this.connect();
 
         this.ws.on('message', this._handleMessage.bind(this));
         this.ws.on('close', this._handleClose.bind(this))

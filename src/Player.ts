@@ -61,11 +61,9 @@ class Player extends EventEmitter {
 
         if (source) this.source = source;
 
-        this.subscription = await this.getSubscription();
-        if (!this.subscription) this.subscription = await this.createSubscription().then(() => true).catch((e) => { throw new Error('Error connecting to the voice channel!\n' + e) })
+        this.connected = await this.createSubscription().then(() => true).catch((e) => { throw new Error('Error connecting to the voice channel!\n' + e) });
 
-        this.connected = true;
-        this.emit(Constants.Events.READY);
+        if (this.connected) this.emit(Constants.Events.READY);
     }
 
     async stop(): Promise<void> {

@@ -55,13 +55,15 @@ class Player extends EventEmitter {
 
     async connect(source: Message | Interaction, voiceChannel?: VoiceChannel): Promise<void> {
         // @ts-ignore
-        this.voiceChannel = voiceChannel || source.member.voice?.channel;
+        if (source?.member?.voice?.channel || voiceChannel) this.voiceChannel = voiceChannel || source.member?.voice?.channel;
         // @ts-ignore
-        this.channel = source.channel;
-        this.source = source;
+        if (source.channel) this.channel = source.channel;
+
+        if (source) this.source = source;
 
         this.subscription = await this.getSubscription();
         if (!this.subscription) this.subscription = await this.createSubscription().then(() => true).catch((e) => { throw new Error('Error connecting to the voice channel!\n' + e) })
+        
         this.connected = true;
         this.emit(Constants.Events.READY);
     }

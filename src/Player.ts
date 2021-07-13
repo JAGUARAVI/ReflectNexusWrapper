@@ -50,18 +50,16 @@ class Player extends EventEmitter {
         this.paused = false;            //todo: add support for predefined options.paused
         this.loop_mode = LoopMode.OFF;   //todo: add support for predefined options.loop_mode
 
-        if (options.connect !== false) this.connect();
+        if (options.connect !== false) this.connect(this.source);
     }
 
-    get awaitConnection(): Promise<void> {
-        if (this.connected) return new Promise((res) => res());
-        else return new Promise((res) => {
-            this.connect();
-            this.on(Constants.Events.READY, () => res());
-        })
-    }
+    async connect(source: Message | Interaction, voiceChannel?: VoiceChannel): Promise<void> {
+        // @ts-ignore
+        this.voiceChannel = voiceChannel || source.member.voice?.channel;
+        // @ts-ignore
+        this.channel = source.channel;
+        this.source = source;
 
-    async connect(): Promise<void> {
         this.subscription = await this.getSubscription();
         if (!this.subscription) this.subscription = await this.createSubscription().then(() => true).catch((e) => { throw new Error('Error connecting to the voice channel!\n' + e) })
         this.connected = true;
@@ -75,7 +73,7 @@ class Player extends EventEmitter {
 
     async play(query: string, now = false): Promise<TrackData> { //todo: add search (list all tracks [max-10] and ask to pick any one)
         return new Promise(async (res, rej) => {
-            if (!this.connected) await this.awaitConnection;
+            if (!this.connected) await this.connect(this.source);
             if (!query) return rej("No query provided!");
 
             const tracks = await this.manager.search(query).then(a => a.results)
@@ -143,8 +141,7 @@ class Player extends EventEmitter {
 
     async setVolume(volume: number) {
         return await new Promise(async (res, rej) => {
-            if (!this.connected) return rej("No track playing!");
-            if (!this.tracks.length) return rej("No track playing!");
+            if (!this.connected) return rej("Player is not connected!");
 
             if (volume < 0 || volume > 125) return rej("Volume can't be below 0 or above 125!");
 
@@ -163,8 +160,7 @@ class Player extends EventEmitter {
 
     async setLoopMode(mode: LoopMode): Promise<QueueState> {
         return await new Promise(async (res, rej) => {
-            if (!this.connected) return rej("No track playing!");
-            if (!this.tracks.length) return rej("No track playing!");
+            if (!this.connected) return rej("Player is not connected!");
 
             await this.manager.PATCH(`/api/player/${this.guild.id}`, {
                 data: {
@@ -181,7 +177,7 @@ class Player extends EventEmitter {
 
     async _playTracks(tracks: TrackData | TrackData[], now = false): Promise<TrackData[]> {
         return new Promise(async (res, rej) => {
-            if (!this.connected) await this.awaitConnection;
+            if (!this.connected) await this.connect(this.source);
             if (!tracks) return rej("No tracks provided!");
 
             if (!Array.isArray(tracks)) tracks = [tracks];
@@ -191,7 +187,7 @@ class Player extends EventEmitter {
                 tracks: tracks
             });
 
-            if(result.error) rej(result.error);
+            if (result.error) rej(result.error);
 
             this.once(Constants.Events.TRACK_START, (t: TrackData) => res([t]));
             this.once(Constants.Events.TRACK_ADD, (t: TrackData) => res([t]));

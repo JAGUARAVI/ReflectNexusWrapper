@@ -67,6 +67,7 @@ export interface TrackData {
     created_at?: Date
     extractor?: string
     initial?: boolean
+    requested_by?: string
 }
 
 export interface SearchResult {
@@ -104,4 +105,9 @@ export interface QueueState {
 export interface QueueStateUpdate {
     old_state: QueueState;
     new_state: QueueState;
+}
+
+export interface PlayMetaData {
+    source: Message | Interaction,
+    now: boolean
 }

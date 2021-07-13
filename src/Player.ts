@@ -1,7 +1,7 @@
 import EventEmitter from "events";
 import * as Constants from './Constants';
 import Nexus from "./Nexus";
-import { TrackData, LoopMode, Latency, PlayerConstructOptions, QueueState, QueueStateUpdate } from './types/types'
+import { TrackData, LoopMode, Latency, PlayerConstructOptions, QueueState, QueueStateUpdate, PlayMetaData } from './types/types'
 import { Message, Interaction, Guild, TextChannel, VoiceChannel } from 'discord.js'
 
 class Player extends EventEmitter {
@@ -73,7 +73,7 @@ class Player extends EventEmitter {
         await this.destroySubscription();
     }
 
-    async play(query: string, now = false): Promise<TrackData> { //todo: add search (list all tracks [max-10] and ask to pick any one)
+    async play(query: string, data?: PlayMetaData): Promise<TrackData> { //todo: add search (list all tracks [max-10] and ask to pick any one)
         return new Promise(async (res, rej) => {
             if (!this.connected) await this.connect();
             if (!query) return rej("No query provided!");
@@ -85,7 +85,7 @@ class Player extends EventEmitter {
                 this.emit(Constants.Events.NO_RESULTS, query)
             }
 
-            await this._playTracks(tracks[0], now).then(t => res(t[0])).catch(rej);
+            await this._playTracks(tracks[0], data).then(t => res(t[0])).catch(rej);
         })
     }
 
@@ -177,13 +177,13 @@ class Player extends EventEmitter {
         });
     }
 
-    async _playTracks(tracks: TrackData | TrackData[], now = false): Promise<TrackData[]> {
+    async _playTracks(tracks: TrackData | TrackData[], data?: PlayMetaData): Promise<TrackData[]> {
         return new Promise(async (res, rej) => {
             if (!this.connected) await this.connect(this.source);
             if (!tracks) return rej("No tracks provided!");
 
             if (!Array.isArray(tracks)) tracks = [tracks];
-            if (now) tracks.map(t => Object.assign({}, t, { initial: true }));
+            if (data?.now) tracks.map(t => Object.assign({}, t, { initial: true }));
 
             let result = await this.manager.POST(`/api/player/${this.guild.id}`, {
                 tracks: tracks
@@ -191,9 +191,20 @@ class Player extends EventEmitter {
 
             if (result.error) rej(result.error);
 
-            this.once(Constants.Events.TRACK_START, (t: TrackData) => res([t]));
-            this.once(Constants.Events.TRACK_ADD, (t: TrackData) => res([t]));
-            this.once(Constants.Events.TRACKS_ADD, (t: TrackData[]) => res(t));
+            this.once(Constants.Events.TRACK_START, (t: TrackData) => {
+                // @ts-ignore
+                t.requested_by = data.source.member.user.id;
+                res([t])
+            });
+            this.once(Constants.Events.TRACK_ADD, (t: TrackData) => {
+                // @ts-ignore
+                t.requested_by = data.source.member.user.id;
+                res([t])
+            });
+            this.once(Constants.Events.TRACKS_ADD, (tracks: TrackData[]) => {
+                // @ts-ignore
+                res(tracks.map(t => t.requested_by = data.source.member.user.id))
+            });
             this.once(Constants.Events.TRACK_ERROR, (e) => rej(e));
         })
     }

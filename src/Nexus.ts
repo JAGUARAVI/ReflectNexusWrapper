@@ -2,6 +2,7 @@ import EventEmitter from "events";
 import Discord from 'discord.js';
 import WebSocket from 'ws';
 import Player from './Player';
+import Track from './Track';
 import fetch from 'node-fetch';
 import { inspect } from 'util'
 
@@ -121,12 +122,9 @@ class Nexus extends EventEmitter {
                     const player = this.players.get(message.d.guild_id);
                     if (!player) break;
 
-                    const track = message.d.track as TrackData
+                    const track = new Track(message.d.track);
 
                     this.emit(Constants.Events.TRACK_ADD, player, track);
-
-                    if (track.initial) player.tracks = [track, ...player.tracks];
-                    else player.tracks.push(track);
 
                     player.emit(Constants.Events.TRACK_ADD, track);
                     break;
@@ -135,21 +133,16 @@ class Nexus extends EventEmitter {
                     const player = this.players.get(message.d.guild_id);
                     if (!player) break;
 
-                    const tracks = message.d.tracks as TrackData[];
-                    tracks.map(track => {
-                        if (track.initial) player.tracks = [track, ...player.tracks];
-                    });
+                    const tracks = (message.d.tracks as TrackData[]).map(t => new Track(t));
 
-                    this.emit(Constants.Events.TRACKS_ADD, player, tracks);
                     player.emit(Constants.Events.TRACKS_ADD, tracks);
                 }
                 case WSEvents.TRACK_START: {
                     const player = this.players.get(message.d.guild_id);
                     if (!player) break;
 
-                    const track = message.d.track as TrackData
+                    const track = new Track(message.d.track as TrackData)
 
-                    this.emit(Constants.Events.TRACK_START, player, track);
                     player.emit(Constants.Events.TRACK_START, track);
                     break;
                 }
@@ -157,7 +150,7 @@ class Nexus extends EventEmitter {
                     const player = this.players.get(message.d.guild_id);
                     if (!player) break;
 
-                    const track = message.d as TrackData;
+                    const track = new Track(message.d as TrackData);
 
                     this.emit(Constants.Events.TRACK_ERROR, player, track);
                     player.emit(Constants.Events.TRACK_ERROR, track);
@@ -167,7 +160,7 @@ class Nexus extends EventEmitter {
                     const player = this.players.get(message.d.guild_id);
                     if (!player) break;
 
-                    const track = message.d.track as TrackData;
+                    const track = new Track(message.d.track as TrackData);
 
                     this.emit(Constants.Events.TRACK_FINISH, player, track);
 

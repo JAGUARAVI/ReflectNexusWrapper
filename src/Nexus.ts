@@ -124,8 +124,6 @@ class Nexus extends EventEmitter {
 
                     const track = new Track(message.d.track);
 
-                    this.emit(Constants.Events.TRACK_ADD, player, track);
-
                     player.emit(Constants.Events.TRACK_ADD, track);
                     break;
                 }

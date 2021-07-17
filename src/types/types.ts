@@ -64,7 +64,7 @@ export interface TrackData {
     thumbnail?: string
     duration?: number
     author?: string
-    created_at?: Date
+    created_at?: string
     extractor?: string
     initial?: boolean
     requested_by?: string

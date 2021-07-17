@@ -1,11 +1,12 @@
 import EventEmitter from "events";
 import * as Constants from './Constants';
-import Nexus from "./Nexus";
+import Nexus from './Nexus';
+import Track from './Track';
 import { TrackData, LoopMode, Latency, PlayerConstructOptions, QueueState, QueueStateUpdate, PlayMetaData } from './types/types'
 import { Message, Interaction, Guild, TextChannel, VoiceChannel } from 'discord.js'
 
 class Player extends EventEmitter {
-    public tracks: Array<TrackData>
+    public tracks: Array<Track>
     public manager: Nexus
     public source: Message | Interaction
 
@@ -71,12 +72,12 @@ class Player extends EventEmitter {
         await this.destroySubscription();
     }
 
-    async play(query: string, data?: PlayMetaData): Promise<TrackData> { //todo: add search (list all tracks [max-10] and ask to pick any one)
+    async play(query: string, data?: PlayMetaData): Promise<Track> { //todo: add search (list all tracks [max-10] and ask to pick any one)
         return new Promise(async (res, rej) => {
             if (!this.connected) await this.connect();
             if (!query) return rej("No query provided!");
 
-            const tracks = await this.manager.search(query).then(a => a.results)
+            const tracks = await this.manager.search(query).then(a => a.results.map(r => new Track(r)));
 
             if (!tracks.length) {
                 this.manager.emit(Constants.Events.NO_RESULTS, this, query);
@@ -87,14 +88,14 @@ class Player extends EventEmitter {
         })
     }
 
-    async skip(): Promise<TrackData> {
+    async skip(): Promise<Track> {
         return await new Promise(async (res, rej) => {
             if (!this.connected) return rej("No tracks playing to skip!");
             if (!this.tracks.length) return rej("No tracks playing to skip!")
 
             await this.manager.DELETE(`/api/player/${this.guild.id}`);
 
-            this.once(Constants.Events.TRACK_FINISH, (t: TrackData) => res(t))
+            this.once(Constants.Events.TRACK_FINISH, (t: Track) => res(t))
             this.once(Constants.Events.TRACK_ERROR, (e) => rej(e))
         })
     }
@@ -175,7 +176,7 @@ class Player extends EventEmitter {
         });
     }
 
-    async _playTracks(tracks: TrackData | TrackData[], data?: PlayMetaData): Promise<TrackData[]> {
+    async _playTracks(tracks: Track | Track[] | TrackData | TrackData[], data?: PlayMetaData): Promise<Track[]> {
         return new Promise(async (res, rej) => {
             if (!this.connected) await this.connect(this.source);
             if (!tracks) return rej("No tracks provided!");
@@ -189,19 +190,30 @@ class Player extends EventEmitter {
 
             if (result.error) rej(result.error);
 
-            this.once(Constants.Events.TRACK_START, (t: TrackData) => {
-                // @ts-ignore
-                if (data?.source?.member?.user?.id) t.requested_by = data.source.member.user.id;
-                res([t])
+            this.once(Constants.Events.TRACK_START, (track: Track) => {
+                if (data?.source?.member?.user?.id) track.requested_by = data.source.member.user.id;
+                this.manager.emit(Constants.Events.TRACK_START, this, track)
+                res([track])
             });
-            this.once(Constants.Events.TRACK_ADD, (t: TrackData) => {
-                // @ts-ignore
-                if (data?.source?.member?.user?.id) t.requested_by = data.source.member.user.id;
-                res([t])
+            this.once(Constants.Events.TRACK_ADD, (track: Track) => {
+                if (data?.source?.member?.user?.id) track.requested_by = data.source.member.user.id;
+
+                this.manager.emit(Constants.Events.TRACK_ADD, this, track)
+                res([track])
             });
-            this.once(Constants.Events.TRACKS_ADD, (tracks: TrackData[]) => {
-                // @ts-ignore
-                if (data?.source?.member?.user?.id) tracks = tracks.map(t => t.requested_by = data.source.member.user.id)
+            this.once(Constants.Events.TRACKS_ADD, (tracks: Track[]) => {
+                
+                if (data?.source?.member?.user?.id) tracks = tracks.map(t => {
+                    t.requested_by = data.source.member.user.id
+                    return t;
+                })
+
+                tracks.map(track => {
+                    if (track.initial) this.tracks = [track, ...this.tracks];
+                    else this.tracks.push(track);
+                });
+
+                this.manager.emit(Constants.Events.TRACKS_ADD, this, tracks)
                 res(tracks)
             });
             this.once(Constants.Events.TRACK_ERROR, (e) => rej(e));

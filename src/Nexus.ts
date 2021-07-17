@@ -2,6 +2,7 @@ import EventEmitter from "events";
 import Discord from 'discord.js';
 import WebSocket from 'ws';
 import Player from './Player';
+import Track from './Track';
 import fetch from 'node-fetch';
 import { inspect } from 'util'
 
@@ -121,13 +122,11 @@ class Nexus extends EventEmitter {
                     const player = this.players.get(message.d.guild_id);
                     if (!player) break;
 
-                    const track = message.d.track as TrackData
-
-                    this.emit(Constants.Events.TRACK_ADD, player, track);
+                    const track = new Track(message.d.track);
 
                     if (track.initial) player.tracks = [track, ...player.tracks];
                     else player.tracks.push(track);
-
+                    
                     player.emit(Constants.Events.TRACK_ADD, track);
                     break;
                 }
@@ -135,21 +134,21 @@ class Nexus extends EventEmitter {
                     const player = this.players.get(message.d.guild_id);
                     if (!player) break;
 
-                    const tracks = message.d.tracks as TrackData[];
+                    const tracks = (message.d.tracks as TrackData[]).map(t => new Track(t));
+
                     tracks.map(track => {
                         if (track.initial) player.tracks = [track, ...player.tracks];
+                        else player.tracks.push(track);
                     });
 
-                    this.emit(Constants.Events.TRACKS_ADD, player, tracks);
                     player.emit(Constants.Events.TRACKS_ADD, tracks);
                 }
                 case WSEvents.TRACK_START: {
                     const player = this.players.get(message.d.guild_id);
                     if (!player) break;
 
-                    const track = message.d.track as TrackData
+                    const track = new Track(message.d.track as TrackData)
 
-                    this.emit(Constants.Events.TRACK_START, player, track);
                     player.emit(Constants.Events.TRACK_START, track);
                     break;
                 }
@@ -157,7 +156,7 @@ class Nexus extends EventEmitter {
                     const player = this.players.get(message.d.guild_id);
                     if (!player) break;
 
-                    const track = message.d as TrackData;
+                    const track = new Track(message.d as TrackData);
 
                     this.emit(Constants.Events.TRACK_ERROR, player, track);
                     player.emit(Constants.Events.TRACK_ERROR, track);
@@ -167,7 +166,7 @@ class Nexus extends EventEmitter {
                     const player = this.players.get(message.d.guild_id);
                     if (!player) break;
 
-                    const track = message.d.track as TrackData;
+                    const track = new Track(message.d.track as TrackData);
 
                     this.emit(Constants.Events.TRACK_FINISH, player, track);
 
@@ -307,13 +306,13 @@ class Nexus extends EventEmitter {
 
     async GET(url: string): Promise<any> {
         url = this.connectionString + url;
-        return await fetch(url, { method: 'GET', headers: { 'Authorization': this.token, 'Content-Type': 'application/json' } }).then(d => d.json());
+        return await fetch(url, { method: 'GET', headers: { 'Authorization': this.token, 'Content-Type': 'application/json' } }).then((d: any) => d.json());
     }
 
     async POST(url: string, body?: any): Promise<any> {
         url = this.connectionString + url;
         if (!body) body = {};
-        return await fetch(url, { method: 'POST', headers: { 'Authorization': this.token, 'Content-Type': 'application/json' }, body: JSON.stringify(body) }).then(d => d.json());
+        return await fetch(url, { method: 'POST', headers: { 'Authorization': this.token, 'Content-Type': 'application/json' }, body: JSON.stringify(body) }).then((d: any) => d.json());
     }
 
     async PATCH(url: string, body?: any): Promise<any> {

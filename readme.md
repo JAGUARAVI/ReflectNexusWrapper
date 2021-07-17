@@ -64,11 +64,11 @@ player.on('event', (data) => {
 #### All events
 ```
 ('ready') - Emitted when the player or nexus client is ready.
-('trackAdd', TrackData) - When a track is added to queue.
-('tracksAdd', TrackData[]) - When multiple tracks are added to queue.
-('trackStart', TrackData) - When a track starts playing.
-('trackError', TrackData) - When an error occours when playing a track.
-('trackFinish', TrackData) - When a track ends playing.
+('trackAdd', Track) - When a track is added to queue.
+('tracksAdd', Track[]) - When multiple tracks are added to queue.
+('trackStart', Track) - When a track starts playing.
+('trackError', Track) - When an error occours when playing a track.
+('trackFinish', Track) - When a track ends playing.
 ('queueEnd') - When the queue ends. i.e- when all songs are over.
 ('queueStateUpdate', QueueStateUpdate) - When changes are made to the player. i.e - When volume, loopMode, etc is changed.
 ('connectionError', data) - When there is an error connecting to the VoiceChannel.

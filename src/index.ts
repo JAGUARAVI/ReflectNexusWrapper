@@ -8,5 +8,6 @@ export {
     Nexus,
     Player,
     Events,
+    Track,
     Types
 }

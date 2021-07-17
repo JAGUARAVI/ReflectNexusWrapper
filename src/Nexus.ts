@@ -124,6 +124,9 @@ class Nexus extends EventEmitter {
 
                     const track = new Track(message.d.track);
 
+                    if (track.initial) player.tracks = [track, ...player.tracks];
+                    else player.tracks.push(track);
+                    
                     player.emit(Constants.Events.TRACK_ADD, track);
                     break;
                 }
@@ -132,6 +135,11 @@ class Nexus extends EventEmitter {
                     if (!player) break;
 
                     const tracks = (message.d.tracks as TrackData[]).map(t => new Track(t));
+
+                    tracks.map(track => {
+                        if (track.initial) player.tracks = [track, ...player.tracks];
+                        else player.tracks.push(track);
+                    });
 
                     player.emit(Constants.Events.TRACKS_ADD, tracks);
                 }
@@ -298,13 +306,13 @@ class Nexus extends EventEmitter {
 
     async GET(url: string): Promise<any> {
         url = this.connectionString + url;
-        return await fetch(url, { method: 'GET', headers: { 'Authorization': this.token, 'Content-Type': 'application/json' } }).then(d => d.json());
+        return await fetch(url, { method: 'GET', headers: { 'Authorization': this.token, 'Content-Type': 'application/json' } }).then((d: any) => d.json());
     }
 
     async POST(url: string, body?: any): Promise<any> {
         url = this.connectionString + url;
         if (!body) body = {};
-        return await fetch(url, { method: 'POST', headers: { 'Authorization': this.token, 'Content-Type': 'application/json' }, body: JSON.stringify(body) }).then(d => d.json());
+        return await fetch(url, { method: 'POST', headers: { 'Authorization': this.token, 'Content-Type': 'application/json' }, body: JSON.stringify(body) }).then((d: any) => d.json());
     }
 
     async PATCH(url: string, body?: any): Promise<any> {

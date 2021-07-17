@@ -198,9 +198,6 @@ class Player extends EventEmitter {
             this.once(Constants.Events.TRACK_ADD, (track: Track) => {
                 if (data?.source?.member?.user?.id) track.requested_by = data.source.member.user.id;
 
-                if (track.initial) this.tracks = [track, ...this.tracks];
-                else this.tracks.push(track);
-
                 this.manager.emit(Constants.Events.TRACK_ADD, this, track)
                 res([track])
             });

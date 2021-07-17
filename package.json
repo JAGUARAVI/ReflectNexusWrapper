@@ -1,6 +1,6 @@
 {
   "name": "reflect-nexus-wrapper",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "A client for reflect-nexus https://github.com/DevSnowflake/Nexus.",
   "main": "lib/index.js",
   "scripts": {
@@ -16,9 +16,10 @@
   "license": "ISC",
   "devDependencies": {
     "@types/node": "^16.3.1",
+    "@types/node-fetch": "^2.5.11",
     "@types/ws": "^7.4.6",
-    "typescript": "^4.3.5",
-    "discord.js": "^13.0.0-dev.a8984bc.1626048234"
+    "discord.js": "^13.0.0-dev.a8984bc.1626048234",
+    "typescript": "^4.3.5"
   },
   "directories": {
     "lib": "lib"
@@ -37,5 +38,8 @@
   "bugs": {
     "url": "https://github.com/AviDoesDev/ReflectNexusWrapper/issues"
   },
-  "homepage": "https://github.com/AviDoesDev/ReflectNexusWrapper#readme"
+  "homepage": "https://github.com/AviDoesDev/ReflectNexusWrapper#readme",
+  "dependencies": {
+    "node-fetch": "^2.6.1"
+  }
 }

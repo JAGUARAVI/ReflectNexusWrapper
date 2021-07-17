@@ -26,7 +26,7 @@ const myNexusInstance = new Nexus(client, {
 ### Playing music
 ```js
 let player = myNexusInstance.players.get(message.guild.id); //Guild id
-if(!player) player = myNexusInstance.createPlayer(message); // Discord.Message or Discord.Interaction
+if(!player) player = myNexusInstance.createPlayer(message); // Discord.Message
 
 player.play("Dua Lipa - Love Again"); // Song title
 ```
@@ -38,7 +38,7 @@ player.play("Dua Lipa - Love Again"); // Song title
 player.play(query: string, data?: PlayMetaData)
 // Play music. now - whether you want to push the track to the first position in queue
 
-player.connect(source?: Discord.Message | Discord.Interaction, channel?: Discord.VoiceChannel)
+player.connect(source?: Discord.Message , channel?: Discord.VoiceChannel)
 // Connects the player to a VoiceChannel
 
 player.pause(); // Pauses the player

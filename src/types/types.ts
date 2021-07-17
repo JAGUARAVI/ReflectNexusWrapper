@@ -1,5 +1,5 @@
 import Nexus from '../Nexus';
-import { Message, Interaction, Guild, TextChannel, VoiceChannel } from 'discord.js';
+import { Message, Guild, TextChannel, VoiceChannel } from 'discord.js';
 
 export interface NexusConstructOptions {
     port: number
@@ -76,7 +76,7 @@ export interface SearchResult {
 
 export interface PlayerConstructOptions {
     manager?: Nexus
-    source?: Message | Interaction
+    source?: Message
     connect?: boolean
 }
 
@@ -108,6 +108,6 @@ export interface QueueStateUpdate {
 }
 
 export interface PlayMetaData {
-    source: Message | Interaction,
+    source: Message,
     now: boolean
 }

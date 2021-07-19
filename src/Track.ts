@@ -9,6 +9,10 @@ export default class Track {
     created_at: string
     extractor: string
     initial: boolean
+    config?: {
+        encoder_args?: string[];
+        volume?: number;
+    }
     requested_by?: string
 
     constructor(data: TrackData) {
@@ -19,6 +23,7 @@ export default class Track {
         this.author = data.author;
         this.created_at = data.created_at;
         this.extractor = data.extractor;
-        this.initial = data.initial;    
+        this.initial = data.initial;
+        this.config = data.config;  
     }
 }

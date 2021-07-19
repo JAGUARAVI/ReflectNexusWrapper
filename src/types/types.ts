@@ -1,5 +1,5 @@
 import Nexus from '../Nexus';
-import { Message, Guild, TextChannel, VoiceChannel } from 'discord.js';
+import { Message, Guild, TextChannel, VoiceChannel, Interaction } from 'discord.js';
 
 export interface NexusConstructOptions {
     port: number

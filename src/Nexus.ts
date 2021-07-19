@@ -1,5 +1,6 @@
 import EventEmitter from "events";
 import Discord from 'discord.js';
+import Collection from '@discordjs/collection';
 import WebSocket from 'ws';
 import Player from './Player';
 import Track from './Track';
@@ -17,7 +18,7 @@ class Nexus extends EventEmitter {
     public options: NexusConstructOptions;
     public ready: boolean;
 
-    public players = new Discord.Collection<string, Player>();
+    public players = new Collection<string, Player>();
 
     constructor(client: Discord.Client, options: NexusConstructOptions) {
         super();

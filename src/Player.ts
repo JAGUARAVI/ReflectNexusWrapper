@@ -104,10 +104,13 @@ class Player extends EventEmitter {
             }
 
             if (this.tracks.length > 0) {
-                let track = new Track(tracks[0])
+                const track = new Track(tracks[0])
+                if (data?.source?.member?.user?.id) track.requested_by = data.source.member.user.id;
+
                 this.tracks.push(track);
                 this.manager.emit(Constants.Events.TRACK_ADD, this, track)
                 this.emit(Constants.Events.TRACK_ADD, track);
+                
                 return res(track);
             }
 

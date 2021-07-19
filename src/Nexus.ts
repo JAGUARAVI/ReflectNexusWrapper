@@ -5,10 +5,11 @@ import WebSocket from 'ws';
 import Player from './Player';
 import Track from './Track';
 import fetch from 'node-fetch';
-import { inspect } from 'util'
+import AudioFilters from './utils/AudioFilters';
+import { inspect } from 'util';
 
 import * as Constants from './Constants';
-import { NexusStats, NexusConstructOptions, NexusPacket, WSCloseCodes, WSEvents, WSOpCodes, TrackData, SearchResult, PlayerConstructOptions, PlayerInfo, LoopMode, QueueStateUpdate } from './types/types';
+import { NexusStats, NexusConstructOptions, NexusPacket, WSCloseCodes, WSEvents, WSOpCodes, TrackData, SearchResult, PlayerConstructOptions, PlayerInfo, QueueState, QueueStateUpdate, LoopMode } from './types/types';
 
 class Nexus extends EventEmitter {
     private client: Discord.Client;
@@ -17,6 +18,8 @@ class Nexus extends EventEmitter {
 
     public options: NexusConstructOptions;
     public ready: boolean;
+
+    public filters: typeof AudioFilters;
 
     public players = new Collection<string, Player>();
 
@@ -34,11 +37,17 @@ class Nexus extends EventEmitter {
         if (!this.options.port) this.options.port = 0;
         if (!this.options.https) this.options.https = false;
 
+        this.filters = AudioFilters;
+
         this.client.once('ready', () => {
             this._init();
         });
     }
 
+    static get AudioFilters(): typeof AudioFilters {
+        return AudioFilters;
+    }
+    
     get connectionString(): string {
         return `${this.options.https ? 'https' : 'http'}://${this.options.host}${this.options.port ? `:${this.options.port}` : ''}`;
     }
@@ -157,13 +166,13 @@ class Nexus extends EventEmitter {
                     const requestData = player.requestQueue[0];
                     if (requestData.requested_by) track.requested_by = requestData.requested_by;
 
-                    if (player.loop_mode === LoopMode.OFF) {
+                    if (player.loopMode === LoopMode.OFF) {
                         player.tracks.shift();
                         player.requestQueue.shift();
                         if (player.tracks.length) player._playTrack(player.tracks[0]);
-                    } else if (player.loop_mode === LoopMode.TRACK) {
+                    } else if (player.loopMode === LoopMode.TRACK) {
                         player._playTrack(player.tracks[0]);
-                    } else if (player.loop_mode === LoopMode.QUEUE) {
+                    } else if (player.loopMode === LoopMode.QUEUE) {
                         player.tracks.push(player.tracks[0]);
                         player.tracks.shift();
                         player.requestQueue.shift();

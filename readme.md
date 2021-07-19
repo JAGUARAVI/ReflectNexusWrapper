@@ -41,10 +41,15 @@ player.play(query: string, data?: PlayMetaData)
 player.connect(source?: Discord.Message | Discord.Interaction, channel?: Discord.VoiceChannel)
 // Connects the player to a VoiceChannel
 
+player.seek(time: number); // Seek the current song - time in milliseconds
+player.filter(filter: string) // Applies the specified filter to the track. For a list of deafult filters - Player#filters 
+
 player.pause(); // Pauses the player
 player.resume(); // Resumes the player
+
 player.setVolume(volume: number) // Changes player volume, accepts any value between 0 and 125
 player.setLoopMode(mode: LoopMode); // Changes the LoopMode, 0 = OFF, 1 = TRACK, 2 = QUEUE
+
 player.skip() // Skips the song
 player.stop() // Stops the playe - stops music, clears the queue and disconnects from the voice channel
 
@@ -70,7 +75,6 @@ player.on('event', (data) => {
 ```
 ('ready') - Emitted when the player or nexus client is ready.
 ('trackAdd', Track) - When a track is added to queue.
-('tracksAdd', Track[]) - When multiple tracks are added to queue.
 ('trackStart', Track) - When a track starts playing.
 ('trackError', Track) - When an error occours when playing a track.
 ('trackFinish', Track) - When a track ends playing.

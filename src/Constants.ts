@@ -1,7 +1,6 @@
 enum Events {
     READY = "ready",
     TRACK_ADD = "trackAdd",
-    TRACKS_ADD = "tracksAdd",
     TRACK_START = "trackStart",
     TRACK_ERROR = "trackError",
     TRACK_FINISH = "trackFinish",
@@ -12,7 +11,6 @@ enum Events {
     VOICE_CONNECTION_DISCONNECT = "connectionDisconnect",
     AUDIO_PLAYER_ERROR = "audioPlayerError",
     AUDIO_PLAYER_STATUS = "audioPlayerStatus",
-    
     NO_RESULTS = "noResults",
 }
 

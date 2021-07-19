@@ -150,29 +150,32 @@ class Player extends EventEmitter {
     async seek(time: number): Promise<QueueState> {
         return new Promise((res, rej) => {
             const track = this.tracks[0];
+            if (!track) rej("No track is playing!");
             if (time > track.duration) rej('Seek time cannot be greater than the track duration!');
 
             this.manager.PATCH(`/api/player/${this.guild.id}`, {
                 data: {
-                    encoder_args: ['-ss', time/1000, ...this.encoderArgs]
+                    encoder_args: ['-ss', (time/1000), ...this.encoderArgs]
                 }
             });
 
             this.once(Constants.Events.QUEUE_STATE_UPDATE, (state: QueueStateUpdate) => {
-                this.paused = state.new_state.paused;
+                this.streamTime = time;
                 res(state.new_state);
             });
         });
     }
 
-    async filter(filter: FiltersName): Promise<QueueState> {
+    async filter(filter: FiltersName): Promise<QueueState | void> {
         return new Promise((res, rej) => {
             if(!this.manager.filters[filter]) rej("Unknown filter!");
             this.filters[filter] = this.filters[filter] == false; 
 
+            if (!this.tracks.length) res();
+
             this.manager.PATCH(`/api/player/${this.guild.id}`, {
                 data: {
-                    encoder_args: ['-ss', this.streamTime/1000 + 3, ...this.encoderArgs]
+                    encoder_args: ['-ss', (this.streamTime/1000) + 3, ...this.encoderArgs]
                 }
             });
 

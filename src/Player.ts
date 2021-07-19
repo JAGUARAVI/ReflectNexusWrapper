@@ -70,8 +70,7 @@ class Player extends EventEmitter {
             if(this.filters[filter.name] == true) arr.push(filter.value);
         }
 
-        if (arr.length) arr.unshift('-af');
-        return arr;
+        return arr.length ? ['-af', arr.join(', ')] : [];
     }
 
     async connect(source?: Message | Interaction, voiceChannel?: VoiceChannel): Promise<void> {

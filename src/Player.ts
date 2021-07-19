@@ -10,7 +10,7 @@ class Player extends EventEmitter {
     public tracks: Array<Track>
     public requestQueue: Array<TrackData>
     public manager: Nexus
-    public source: Message
+    public source: Message | Interaction
 
     public connected: boolean
     private connecting: boolean

@@ -3,7 +3,7 @@ import * as Constants from './Constants';
 import Nexus from './Nexus';
 import Track from './Track';
 
-import { TrackData, LoopMode, Latency, PlayerConstructOptions, QueueState, QueueStateUpdate, PlayMetaData, NexusPacket, WSEvents, PlayerInfo } from './types/types'
+import { TrackData, LoopMode, Latency, PlayerConstructOptions, QueueState, QueueStateUpdate, PlayMetaData, QueueFilters, FiltersName } from './types/types'
 import { Message, Interaction, Guild, TextChannel, VoiceChannel } from 'discord.js'
 
 class Player extends EventEmitter {
@@ -17,7 +17,8 @@ class Player extends EventEmitter {
 
     public volume: number
     public paused: boolean
-    public loop_mode: LoopMode
+    public loopMode: LoopMode
+    public filters: QueueFilters
 
     public streamTime: number
     public updateTimestamp: Date
@@ -52,9 +53,25 @@ class Player extends EventEmitter {
         this.streamTime = 0;
         this.volume = 100;              //todo: add support for predefined options.volume
         this.paused = false;            //todo: add support for predefined options.paused
-        this.loop_mode = LoopMode.OFF;   //todo: add support for predefined options.loop_mode
+        this.loopMode = LoopMode.OFF;   //todo: add support for predefined options.loopMode
+
+        this.filters = {};
+        for (const filter of this.manager.filters) {
+            this.filters[filter.name] = false;
+        };
 
         if (options.connect !== false) this.connect(this.source, this.voiceChannel);
+    }
+
+    get encoderArgs(): Array<string> {
+        let arr = [];
+        
+        for (const filter of this.manager.filters){
+            if(this.filters[filter.name] == true) arr.push(filter.value);
+        }
+
+        if (arr.length) arr.unshift('-af');
+        return arr;
     }
 
     async connect(source?: Message | Interaction, voiceChannel?: VoiceChannel): Promise<void> {
@@ -110,7 +127,7 @@ class Player extends EventEmitter {
                 this.tracks.push(track);
                 this.manager.emit(Constants.Events.TRACK_ADD, this, track)
                 this.emit(Constants.Events.TRACK_ADD, track);
-                
+
                 return res(track);
             }
 
@@ -128,6 +145,42 @@ class Player extends EventEmitter {
             this.once(Constants.Events.TRACK_FINISH, (t: Track) => res(t))
             this.once(Constants.Events.TRACK_ERROR, (e) => rej(e))
         })
+    }
+
+    async seek(time: number): Promise<QueueState> {
+        return new Promise((res, rej) => {
+            const track = this.tracks[0];
+            if (time > track.duration) rej('Seek time cannot be greater than the track duration!');
+
+            this.manager.PATCH(`/api/player/${this.guild.id}`, {
+                data: {
+                    encoder_args: ['-ss', time/1000, ...this.encoderArgs]
+                }
+            });
+
+            this.once(Constants.Events.QUEUE_STATE_UPDATE, (state: QueueStateUpdate) => {
+                this.paused = state.new_state.paused;
+                res(state.new_state);
+            });
+        });
+    }
+
+    async filter(filter: FiltersName): Promise<QueueState> {
+        return new Promise((res, rej) => {
+            if(!this.manager.filters[filter]) rej("Unknown filter!");
+            this.filters[filter] = this.filters[filter] == false; 
+
+            this.manager.PATCH(`/api/player/${this.guild.id}`, {
+                data: {
+                    encoder_args: ['-ss', this.streamTime/1000 + 3, ...this.encoderArgs]
+                }
+            });
+
+            this.once(Constants.Events.QUEUE_STATE_UPDATE, (state: QueueStateUpdate) => {
+                this.paused = state.new_state.paused;
+                res(state.new_state);
+            });
+        });
     }
 
     async pause(): Promise<QueueState> {
@@ -190,7 +243,7 @@ class Player extends EventEmitter {
     }
 
     setLoopMode(mode: LoopMode): void {
-        this.loop_mode = mode;
+        this.loopMode = mode;
     }
 
     async _playTrack(track: Track | TrackData, data?: PlayMetaData): Promise<Track> {
@@ -204,7 +257,7 @@ class Player extends EventEmitter {
                 track.config = Object.assign({}, track.config, { volume: data.volume });
                 this.volume = data.volume;
             }
-            else track.config = Object.assign({}, track.config, { volume: this.volume });
+            else track.config = Object.assign({}, track.config, { volume: this.volume, encoder_args: this.encoderArgs });
 
             const trackData = Object.assign({}, track) as TrackData;
             if (data?.source?.member?.user?.id) trackData.requested_by = data.source.member.user.id;

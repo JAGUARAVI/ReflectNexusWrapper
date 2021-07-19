@@ -180,4 +180,6 @@ export type QueueFilters = {
     chorus?: boolean;
     chorus2d?: boolean;
     chorus3d?: boolean;
+    fadein?: boolean;
+};
     

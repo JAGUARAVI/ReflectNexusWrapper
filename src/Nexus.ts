@@ -166,13 +166,13 @@ class Nexus extends EventEmitter {
                     const requestData = player.requestQueue[0];
                     if (requestData.requested_by) track.requested_by = requestData.requested_by;
 
-                    if (player.loop_mode === LoopMode.OFF) {
+                    if (player.loopMode === LoopMode.OFF) {
                         player.tracks.shift();
                         player.requestQueue.shift();
                         if (player.tracks.length) player._playTrack(player.tracks[0]);
-                    } else if (player.loop_mode === LoopMode.TRACK) {
+                    } else if (player.loopMode === LoopMode.TRACK) {
                         player._playTrack(player.tracks[0]);
-                    } else if (player.loop_mode === LoopMode.QUEUE) {
+                    } else if (player.loopMode === LoopMode.QUEUE) {
                         player.tracks.push(player.tracks[0]);
                         player.tracks.shift();
                         player.requestQueue.shift();

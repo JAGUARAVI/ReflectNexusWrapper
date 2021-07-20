@@ -70,7 +70,7 @@ class Player extends EventEmitter {
             if(this.filters[filter.name] == true) arr.push(filter.value);
         }
 
-        return arr.length ? ['-af', arr.join(', ')] : [];
+        return arr.length ? ['-af', arr.join(',')] : [];
     }
 
     async connect(source?: Message | Interaction, voiceChannel?: VoiceChannel): Promise<void> {
@@ -116,7 +116,7 @@ class Player extends EventEmitter {
             if (!tracks.length) {
                 this.manager.emit(Constants.Events.NO_RESULTS, this, query);
                 this.emit(Constants.Events.NO_RESULTS, query);
-                rej(Constants.Events.NO_RESULTS);
+                return rej(Constants.Events.NO_RESULTS);
             }
 
             if (this.tracks.length > 0) {
@@ -149,8 +149,8 @@ class Player extends EventEmitter {
     async seek(time: number): Promise<QueueState> {
         return new Promise((res, rej) => {
             const track = this.tracks[0];
-            if (!track) rej("No track is playing!");
-            if (time > track.duration) rej('Seek time cannot be greater than the track duration!');
+            if (!track) return rej("No track is playing!");
+            if (time > track.duration) return rej('Seek time cannot be greater than the track duration!');
 
             this.manager.PATCH(`/api/player/${this.guild.id}`, {
                 data: {
@@ -167,7 +167,7 @@ class Player extends EventEmitter {
 
     async filter(filter: FiltersName): Promise<QueueState | void> {
         return new Promise((res, rej) => {
-            if(!this.manager.filters[filter]) rej("Unknown filter!");
+            if(!this.manager.filters[filter]) return rej("Unknown filter!");
             this.filters[filter] = this.filters[filter] == false; 
 
             if (!this.tracks.length) res();
@@ -288,7 +288,7 @@ class Player extends EventEmitter {
     async createSubscription(): Promise<any> {
         return new Promise(async (res, rej) => {
             this.manager.POST(`/api/subscription/${this.guild.id}/${this.voiceChannel.id}`).then((s: any) => {
-                if (s.error) rej(s.error);
+                if (s.error) return rej(s.error);
             });
             this.once(Constants.Events.VOICE_CONNECTION_READY, (d) => res(d))
             this.once(Constants.Events.VOICE_CONNECTION_ERROR, (d) => rej(d))

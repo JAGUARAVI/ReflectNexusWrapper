@@ -91,7 +91,7 @@ class Nexus extends EventEmitter {
 
     async search(query: string, identifier = 'ytsearch'): Promise<SearchResult> {
         return new Promise(async (res, rej) => {
-            if (!query) rej("No search string provided!");
+            if (!query) return rej("No search string provided!");
             await this.GET(`/api/tracks/search?query=${encodeURIComponent(query)}&identifier=${encodeURIComponent(identifier)}`).then(res);
         })
     }

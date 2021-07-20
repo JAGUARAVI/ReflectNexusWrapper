@@ -102,8 +102,9 @@ class Player extends EventEmitter {
     }
 
     async stop(): Promise<void> {
+        this.manager.players.delete(this.guild.id);
         this.connected = false;
-        await this.destroySubscription();
+        return await this.destroySubscription();
     }
 
     async play(query: string, data?: PlayMetaData): Promise<Track> { //todo: add search (list all tracks [max-10] and ask to pick any one)
@@ -141,7 +142,10 @@ class Player extends EventEmitter {
 
             this.manager.DELETE(`/api/player/${this.guild.id}`);
 
-            this.once(Constants.Events.TRACK_FINISH, (t: Track) => res(t))
+            this.once(Constants.Events.TRACK_FINISH, (t: Track) => {
+                this.tracks.shift();
+                res(t);
+            });
             this.once(Constants.Events.TRACK_ERROR, (e) => rej(e))
         })
     }

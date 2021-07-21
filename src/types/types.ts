@@ -1,5 +1,5 @@
 import Nexus from '../Nexus';
-import { Message, Guild, TextChannel, VoiceChannel, Interaction } from 'discord.js';
+import { Message, Guild, TextChannel, VoiceChannel } from 'discord.js';
 
 export interface NexusConstructOptions {
     port: number
@@ -114,7 +114,7 @@ export interface QueueStateUpdate {
 }
 
 export interface PlayMetaData {
-    source?: Message | Interaction
+    source?: Message
     now?: boolean
     volume?: number
 }
@@ -182,4 +182,3 @@ export type QueueFilters = {
     chorus3d?: boolean;
     fadein?: boolean;
 };
-    

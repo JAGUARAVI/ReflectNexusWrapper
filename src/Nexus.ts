@@ -80,7 +80,7 @@ class Nexus extends EventEmitter {
         });
     }
 
-    createPlayer(source: Discord.Message | Discord.Interaction, options?: PlayerConstructOptions): Player | Error { //replace with player options
+    createPlayer(source: Discord.Message, options?: PlayerConstructOptions): Player | Error { //replace with player options
         if (!source?.guild?.id) return new Error("No source provided");
 
         if (this.players.get(source.guild.id)) return this.players.get(source.guild.id);

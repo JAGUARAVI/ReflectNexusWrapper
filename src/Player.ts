@@ -4,13 +4,13 @@ import Nexus from './Nexus';
 import Track from './Track';
 
 import { TrackData, LoopMode, Latency, PlayerConstructOptions, QueueState, QueueStateUpdate, PlayMetaData, QueueFilters, FiltersName } from './types/types'
-import { Message, Interaction, Guild, TextChannel, VoiceChannel } from 'discord.js'
+import { Message, Guild, TextChannel, VoiceChannel } from 'discord.js'
 
 class Player extends EventEmitter {
     public tracks: Array<Track>
     public requestQueue: Array<TrackData>
     public manager: Nexus
-    public source: Message | Interaction
+    public source: Message
 
     public connected: boolean
     private connecting: boolean
@@ -73,7 +73,7 @@ class Player extends EventEmitter {
         return arr.length ? ['-af', arr.join(',')] : [];
     }
 
-    async connect(source?: Message | Interaction, voiceChannel?: VoiceChannel): Promise<void> {
+    async connect(source?: Message, voiceChannel?: VoiceChannel): Promise<void> {
         if (this.connecting == true) {
             return new Promise((res, rej) => {
                 this.once(Constants.Events.VOICE_CONNECTION_READY, (d) => {

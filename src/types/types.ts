@@ -24,12 +24,9 @@ export enum WSOpCodes {
 
 export enum WSEvents {
     READY = "READY",
-    TRACK_ADD = "TRACK_ADD",
-    TRACKS_ADD = "TRACKS_ADD",
     TRACK_START = "TRACK_START",
     TRACK_FINISH = "TRACK_FINISH",
     TRACK_ERROR = "TRACK_ERROR",
-    QUEUE_END = "QUEUE_END",
     QUEUE_STATE_UPDATE = "QUEUE_STATE_UPDATE",
     VOICE_CONNECTION_READY = "VOICE_CONNECTION_READY",
     VOICE_CONNECTION_ERROR = "VOICE_CONNECTION_ERROR",
@@ -37,6 +34,7 @@ export enum WSEvents {
     AUDIO_PLAYER_ERROR = "AUDIO_PLAYER_ERROR",
     AUDIO_PLAYER_STATUS = "AUDIO_PLAYER_STATUS"
 }
+
 
 export enum LoopMode {
     OFF = 0,
@@ -68,6 +66,15 @@ export interface TrackData {
     extractor?: string
     initial?: boolean
     requested_by?: string
+    
+    playlist?: boolean
+    tracks?: TrackData[] //Playlist only
+
+    //Uh
+    config?: {
+        encoder_args?: string[];
+        volume?: number;
+    }
 }
 
 export interface SearchResult {
@@ -83,11 +90,10 @@ export interface PlayerConstructOptions {
 export interface PlayerInfo {
     current?: TrackData
     stream_time: number
-    loop_mode: LoopMode
     volume: number
     paused: boolean
     latency: Latency
-    tracks: Array<TrackData>
+    //tracks: Array<TrackData>
 }
 
 export interface Latency {
@@ -108,6 +114,71 @@ export interface QueueStateUpdate {
 }
 
 export interface PlayMetaData {
-    source: Message,
-    now: boolean
+    source?: Message
+    now?: boolean
+    volume?: number
 }
+
+export interface NexusStats {
+    timestamp: number
+
+    ffmpeg_process: {
+        count: number
+        stats: any[]
+    },
+    process: {
+        memory: {
+            rss: number
+            heap_total: number
+            heap_used: number
+            external: number
+            array_buffers: number
+        },
+        cpu: {
+            count: number
+            total_usage: number
+            usage: {
+                user: number
+                system: number
+            }
+        }
+    },
+    clients: {
+        count: number
+        subscriptions: number
+    },
+    uptime: 300
+}
+
+export type FiltersName = keyof QueueFilters;
+
+export type QueueFilters = {
+    bassboost?: boolean;
+    '8D'?: boolean;
+    vaporwave?: boolean;
+    nightcore?: boolean;
+    phaser?: boolean;
+    tremolo?: boolean;
+    vibrato?: boolean;
+    reverse?: boolean;
+    treble?: boolean;
+    normalizer?: boolean;
+    surrounding?: boolean;
+    pulsator?: boolean;
+    subboost?: boolean;
+    karaoke?: boolean;
+    flanger?: boolean;
+    gate?: boolean;
+    haas?: boolean;
+    mcompand?: boolean;
+    mono?: boolean;
+    mstlr?: boolean;
+    mstrr?: boolean;
+    compressor?: boolean;
+    expander?: boolean;
+    softlimiter?: boolean;
+    chorus?: boolean;
+    chorus2d?: boolean;
+    chorus3d?: boolean;
+    fadein?: boolean;
+};

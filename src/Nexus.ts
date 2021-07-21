@@ -1,13 +1,15 @@
 import EventEmitter from "events";
 import Discord from 'discord.js';
+import Collection from '@discordjs/collection';
 import WebSocket from 'ws';
 import Player from './Player';
 import Track from './Track';
 import fetch from 'node-fetch';
-import { inspect } from 'util'
+import AudioFilters from './utils/AudioFilters';
+import { inspect } from 'util';
 
 import * as Constants from './Constants';
-import { NexusConstructOptions, NexusPacket, WSCloseCodes, WSEvents, WSOpCodes, TrackData, SearchResult, PlayerConstructOptions, PlayerInfo, QueueState, QueueStateUpdate } from './types/types';
+import { NexusStats, NexusConstructOptions, NexusPacket, WSCloseCodes, WSEvents, WSOpCodes, TrackData, SearchResult, PlayerConstructOptions, PlayerInfo, QueueState, QueueStateUpdate, LoopMode } from './types/types';
 
 class Nexus extends EventEmitter {
     private client: Discord.Client;
@@ -17,7 +19,9 @@ class Nexus extends EventEmitter {
     public options: NexusConstructOptions;
     public ready: boolean;
 
-    public players = new Discord.Collection<string, Player>();
+    public filters: typeof AudioFilters;
+
+    public players = new Collection<string, Player>();
 
     constructor(client: Discord.Client, options: NexusConstructOptions) {
         super();
@@ -33,11 +37,17 @@ class Nexus extends EventEmitter {
         if (!this.options.port) this.options.port = 0;
         if (!this.options.https) this.options.https = false;
 
+        this.filters = AudioFilters;
+
         this.client.once('ready', () => {
             this._init();
         });
     }
 
+    static get AudioFilters(): typeof AudioFilters {
+        return AudioFilters;
+    }
+    
     get connectionString(): string {
         return `${this.options.https ? 'https' : 'http'}://${this.options.host}${this.options.port ? `:${this.options.port}` : ''}`;
     }
@@ -57,7 +67,7 @@ class Nexus extends EventEmitter {
     }
 
     async _init(): Promise<void> {
-        await this.connect();
+        this.connect();
 
         this.ws.on('message', this._handleMessage.bind(this));
         this.ws.on('close', this._handleClose.bind(this))
@@ -81,9 +91,13 @@ class Nexus extends EventEmitter {
 
     async search(query: string, identifier = 'ytsearch'): Promise<SearchResult> {
         return new Promise(async (res, rej) => {
-            if (!query) rej("No search string provided!");
+            if (!query) return rej("No search string provided!");
             await this.GET(`/api/tracks/search?query=${encodeURIComponent(query)}&identifier=${encodeURIComponent(identifier)}`).then(res);
         })
+    }
+
+    async getStats(): Promise<NexusStats> {
+        return await this.GET('/stats');
     }
 
     async _handleMessage(rawMessage: string) {
@@ -118,37 +132,18 @@ class Nexus extends EventEmitter {
                     this.emit(Constants.Events.READY);
                     break;
                 }
-                case WSEvents.TRACK_ADD: {
-                    const player = this.players.get(message.d.guild_id);
-                    if (!player) break;
-
-                    const track = new Track(message.d.track);
-
-                    if (track.initial) player.tracks = [track, ...player.tracks];
-                    else player.tracks.push(track);
-
-                    player.emit(Constants.Events.TRACK_ADD, track);
-                    break;
-                }
-                case WSEvents.TRACKS_ADD: {
-                    const player = this.players.get(message.d.guild_id);
-                    if (!player) break;
-
-                    const tracks = (message.d.tracks as TrackData[]).map(t => new Track(t));
-
-                    tracks.map(track => {
-                        if (track.initial) player.tracks = [track, ...player.tracks];
-                        else player.tracks.push(track);
-                    });
-
-                    player.emit(Constants.Events.TRACKS_ADD, tracks);
-                }
                 case WSEvents.TRACK_START: {
                     const player = this.players.get(message.d.guild_id);
                     if (!player) break;
 
-                    const track = new Track(message.d.track as TrackData)
+                    const track = new Track(message.d.track as TrackData);
 
+                    const requestData = player.requestQueue[0];
+                    if (requestData?.requested_by) track.requested_by = requestData.requested_by;
+
+                    player.tracks.push(track);
+
+                    this.emit(Constants.Events.TRACK_START, player, track);
                     player.emit(Constants.Events.TRACK_START, track);
                     break;
                 }
@@ -156,7 +151,7 @@ class Nexus extends EventEmitter {
                     const player = this.players.get(message.d.guild_id);
                     if (!player) break;
 
-                    const track = new Track(message.d as TrackData);
+                    const track = player.tracks[0];
 
                     this.emit(Constants.Events.TRACK_ERROR, player, track);
                     player.emit(Constants.Events.TRACK_ERROR, track);
@@ -168,9 +163,23 @@ class Nexus extends EventEmitter {
 
                     const track = new Track(message.d.track as TrackData);
 
-                    this.emit(Constants.Events.TRACK_FINISH, player, track);
+                    const requestData = player.requestQueue[0];
+                    if (requestData.requested_by) track.requested_by = requestData.requested_by;
 
-                    player.tracks.shift();
+                    if (player.loopMode === LoopMode.OFF) {
+                        player.tracks.shift();
+                        player.requestQueue.shift();
+                        if (player.tracks.length) player._playTrack(player.tracks[0]);
+                    } else if (player.loopMode === LoopMode.TRACK) {
+                        player._playTrack(player.tracks[0]);
+                    } else if (player.loopMode === LoopMode.QUEUE) {
+                        player.tracks.push(player.tracks[0]);
+                        player.tracks.shift();
+                        player.requestQueue.shift();
+                        if (player.tracks.length) player._playTrack(player.tracks[0]);
+                    }
+
+                    this.emit(Constants.Events.TRACK_FINISH, player, track);
                     player.emit(Constants.Events.TRACK_FINISH, track);
                     break;
                 }
@@ -182,16 +191,6 @@ class Nexus extends EventEmitter {
 
                     this.emit(Constants.Events.QUEUE_STATE_UPDATE, player, state);
                     player.emit(Constants.Events.QUEUE_STATE_UPDATE, state);
-                    break;
-                }
-                case WSEvents.QUEUE_END: {
-                    const player = this.players.get(message.d.guild_id);
-                    if (!player) break;
-
-                    player.tracks = [];
-
-                    this.emit(Constants.Events.QUEUE_END, player);
-                    player.emit(Constants.Events.QUEUE_END);
                     break;
                 }
                 case WSEvents.VOICE_CONNECTION_READY: {
@@ -214,6 +213,8 @@ class Nexus extends EventEmitter {
                     const player = this.players.get(message.d.guild_id);
                     if (!player) break;
 
+                    player.connected = false;
+
                     this.emit(Constants.Events.VOICE_CONNECTION_DISCONNECT, player);
                     player.emit(Constants.Events.VOICE_CONNECTION_DISCONNECT);
                     break;
@@ -223,14 +224,7 @@ class Nexus extends EventEmitter {
                     if (!player) break;
 
                     const info = message.d as PlayerInfo;
-
                     player.setInfo(info);
-
-                    /*
-                    this.emit(Constants.Events.AUDIO_PLAYER_STATUS, player, message.d)
-                    player.emit(Constants.Events.AUDIO_PLAYER_STATUS, message.d)
-                    */
-
                     break;
                 }
                 case WSEvents.AUDIO_PLAYER_ERROR: {
@@ -309,10 +303,10 @@ class Nexus extends EventEmitter {
         return await fetch(url, { method: 'GET', headers: { 'Authorization': this.token, 'Content-Type': 'application/json' } }).then((d: any) => d.json());
     }
 
-    async POST(url: string, body?: any): Promise<any> {
+    async POST(url: string, body?: any, json = true): Promise<any> {
         url = this.connectionString + url;
         if (!body) body = {};
-        return await fetch(url, { method: 'POST', headers: { 'Authorization': this.token, 'Content-Type': 'application/json' }, body: JSON.stringify(body) }).then((d: any) => d.json());
+        return await fetch(url, { method: 'POST', headers: { 'Authorization': this.token, 'Content-Type': 'application/json' }, body: JSON.stringify(body) }).then((d: any) => json ? d.json() : d);
     }
 
     async PATCH(url: string, body?: any): Promise<any> {

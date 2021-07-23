@@ -17,10 +17,10 @@ const client = new Discord.Client();
 const { Nexus } = require('reflect-nexus-wrapper');
 
 const myNexusInstance = new Nexus(client, {
-    port: 3000; // Your Nexus server port here
-    token: "SwagLordNitroUser12345"; // Your Nexus server password here
-    host: 'localhost'; // Your Nexus server hostname here
-    https: false; // Whether your server is secure and using https and wss protocols
+    port: 3000, // Your Nexus server port here
+    token: "SwagLordNitroUser12345", // Your Nexus server password here
+    host: 'localhost', // Your Nexus server hostname here
+    https: false, // Whether your server is secure and using https and wss protocols
 });
 ```
 ### Playing music

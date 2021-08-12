@@ -102,7 +102,6 @@ class Player extends EventEmitter {
     }
 
     async stop(): Promise<void> {
-        this.manager.players.delete(this.guild.id);
         this.connected = false;
         return await this.destroySubscription();
     }

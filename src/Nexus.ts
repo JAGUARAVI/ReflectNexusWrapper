@@ -119,6 +119,7 @@ class Nexus extends EventEmitter {
                     if (message.d.d.channel_id == null) {
                         const player = this.players.get(message.d.d.guild_id);
                         if(!player) break;
+                        player.connected = false;
                         player.emit(Constants.Events.VOICE_CONNECTION_DISCONNECT);
                         this.emit(Constants.Events.VOICE_CONNECTION_DISCONNECT, player);
                     }

@@ -47,7 +47,7 @@ class Nexus extends EventEmitter {
     static get AudioFilters(): typeof AudioFilters {
         return AudioFilters;
     }
-    
+
     get connectionString(): string {
         return `${this.options.https ? 'https' : 'http'}://${this.options.host}${this.options.port ? `:${this.options.port}` : ''}`;
     }
@@ -115,6 +115,13 @@ class Nexus extends EventEmitter {
                 }
                 case WSOpCodes.VOICE_STATE_UPDATE: {
                     this.client.guilds.cache.get(message.d.d.guild_id)?.shard.send(message.d);
+
+                    if (message.d.d.channel_id == null) {
+                        const player = this.players.get(message.d.d.guild_id);
+                        if(!player) break;
+                        player.emit(Constants.Events.VOICE_CONNECTION_DISCONNECT);
+                        this.emit(Constants.Events.VOICE_CONNECTION_DISCONNECT, player);
+                    }
                     break;
                 }
                 default: {

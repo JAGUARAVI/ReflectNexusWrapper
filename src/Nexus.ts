@@ -6,6 +6,7 @@ import Player from './Player';
 import Track from './Track';
 import fetch from 'node-fetch';
 import AudioFilters from './utils/AudioFilters';
+import msToString from "./utils/msToString";
 import { inspect } from 'util';
 
 import * as Constants from './Constants';
@@ -109,6 +110,36 @@ class Nexus extends EventEmitter {
 
     async getStats(): Promise<NexusStats> {
         return await this.GET('/stats');
+    }
+
+    createProgressBar(player: Player, options = { length: 15, indicator: '🔘', line: '▬', timecodes: true }) {
+        const currentTime = player.streamTime || 0;
+        const totalTime = player.tracks[0]?.duration || 0;
+        const length = typeof options?.length === 'number' ? (options?.length <= 0 || options?.length === Infinity ? 15 : options?.length) : 15;
+    
+        const index = Math.round((currentTime / totalTime) * length);
+        const indicator = typeof options?.indicator === 'string' && options?.indicator.length > 0 ? options?.indicator : '🔘';
+        const line = typeof options?.line === 'string' && options?.line.length > 0 ? options?.line : '▬';
+    
+        if (index >= 1 && index <= length) {
+            const bar = line.repeat(length - 1).split('');
+            bar.splice(index, 0, indicator);
+            if (Boolean(options?.timecodes)) {
+                const currentTimecode = msToString(currentTime);
+                const endTimecode = msToString(totalTime);
+                return `${currentTimecode} ┃ ${bar.join('')} ┃ ${endTimecode}`;
+            } else {
+                return `${bar.join('')}`;
+            }
+        } else {
+            if (Boolean(options?.timecodes)) {
+                const currentTimecode = msToString(currentTime);
+                const endTimecode = msToString(totalTime);
+                return `${currentTimecode} ┃ ${indicator}${line.repeat(length - 1)} ┃ ${endTimecode}`;
+            } else {
+                return `${indicator}${line.repeat(length - 1)}`;
+            }
+        }
     }
 
     async _handleMessage(rawMessage: string) {

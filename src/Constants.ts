@@ -5,7 +5,7 @@ enum Events {
     TRACK_ERROR = "trackError",
     TRACK_FINISH = "trackFinish",
     QUEUE_END = "queueEnd",
-    QUEUE_STATE_UPDATE = "queueStateUpdate",
+    PLAYER_STATE_UPDATE = "playerStateUpdate",
     VOICE_CONNECTION_READY = "connectionReady",
     VOICE_CONNECTION_ERROR = "connectionError",
     VOICE_CONNECTION_DISCONNECT = "connectionDisconnect",

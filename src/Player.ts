@@ -3,7 +3,7 @@ import * as Constants from './Constants';
 import Nexus from './Nexus';
 import Track from './Track';
 
-import { TrackData, LoopMode, Latency, PlayerConstructOptions, QueueState, QueueStateUpdate, PlayMetaData, QueueFilters, FiltersName } from './types/types'
+import { TrackData, LoopMode, Latency, PlayerConstructOptions, PlayerState, PlayerStateUpdate, PlayMetaData, QueueFilters, FiltersName } from './types/types'
 import { Message, Interaction, Guild, TextChannel, VoiceChannel } from 'discord.js'
 
 class Player extends EventEmitter {
@@ -149,7 +149,7 @@ class Player extends EventEmitter {
         })
     }
 
-    async seek(time: number): Promise<QueueState> {
+    async seek(time: number): Promise<PlayerState> {
         return new Promise((res, rej) => {
             const track = this.tracks[0];
             if (!track) return rej("No track is playing!");
@@ -161,14 +161,14 @@ class Player extends EventEmitter {
                 }
             });
 
-            this.once(Constants.Events.QUEUE_STATE_UPDATE, (state: QueueStateUpdate) => {
+            this.once(Constants.Events.PLAYER_STATE_UPDATE, (state: PlayerStateUpdate) => {
                 this.streamTime = time;
                 res(state.new_state);
             });
         });
     }
 
-    async filter(filter: FiltersName): Promise<QueueState | void> {
+    async filter(filter: FiltersName): Promise<PlayerState | void> {
         return new Promise((res, rej) => {
             if(!this.manager.filters[filter]) return rej("Unknown filter!");
             this.filters[filter] = this.filters[filter] == false; 
@@ -181,14 +181,14 @@ class Player extends EventEmitter {
                 }
             });
 
-            this.once(Constants.Events.QUEUE_STATE_UPDATE, (state: QueueStateUpdate) => {
+            this.once(Constants.Events.PLAYER_STATE_UPDATE, (state: PlayerStateUpdate) => {
                 this.paused = state.new_state.paused;
                 res(state.new_state);
             });
         });
     }
 
-    async pause(): Promise<QueueState> {
+    async pause(): Promise<PlayerState> {
         return await new Promise(async (res, rej) => {
             if (!this.connected) return rej("No track playing!");
             if (!this.tracks.length) return rej("No track playing!");
@@ -201,14 +201,14 @@ class Player extends EventEmitter {
                 }
             });
 
-            this.once(Constants.Events.QUEUE_STATE_UPDATE, (state: QueueStateUpdate) => {
+            this.once(Constants.Events.PLAYER_STATE_UPDATE, (state: PlayerStateUpdate) => {
                 this.paused = state.new_state.paused;
                 res(state.new_state);
             });
         });
     }
 
-    async resume(): Promise<QueueState> {
+    async resume(): Promise<PlayerState> {
         return await new Promise(async (res, rej) => {
             if (!this.connected) return rej("No track playing!");
             if (!this.tracks.length) return rej("No track playing!");
@@ -221,14 +221,14 @@ class Player extends EventEmitter {
                 }
             });
 
-            this.once(Constants.Events.QUEUE_STATE_UPDATE, (state: QueueStateUpdate) => {
+            this.once(Constants.Events.PLAYER_STATE_UPDATE, (state: PlayerStateUpdate) => {
                 this.paused = state.new_state.paused;
                 res(state.new_state);
             });
         });
     }
 
-    async setVolume(volume: number): Promise<QueueState> {
+    async setVolume(volume: number): Promise<PlayerState> {
         return await new Promise(async (res, rej) => {
             if (!this.connected) return rej("Player is not connected!");
 
@@ -240,7 +240,7 @@ class Player extends EventEmitter {
                 }
             });
 
-            this.on(Constants.Events.QUEUE_STATE_UPDATE, (state: QueueStateUpdate) => {
+            this.on(Constants.Events.PLAYER_STATE_UPDATE, (state: PlayerStateUpdate) => {
                 this.volume = state.new_state.volume;
                 res(state.new_state);
             });

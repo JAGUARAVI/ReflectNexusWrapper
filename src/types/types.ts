@@ -13,13 +13,17 @@ export interface NexusConstructOptions {
 export interface NexusPacket {
     t?: WSEvents
     op?: WSOpCodes
-    d?: any
+    d?: { 
+        [key: string]: any 
+    }
 }
 
 export enum WSOpCodes {
     HELLO = 0,
     VOICE_STATE_UPDATE = 1,
-    IDENTIFY = 10
+    IDENTIFY = 10,
+    PING = 11,
+    PONG = 12
 }
 
 export enum WSEvents {
@@ -27,7 +31,7 @@ export enum WSEvents {
     TRACK_START = "TRACK_START",
     TRACK_FINISH = "TRACK_FINISH",
     TRACK_ERROR = "TRACK_ERROR",
-    QUEUE_STATE_UPDATE = "QUEUE_STATE_UPDATE",
+    PLAYER_STATE_UPDATE = "PLAYER_STATE_UPDATE",
     VOICE_CONNECTION_READY = "VOICE_CONNECTION_READY",
     VOICE_CONNECTION_ERROR = "VOICE_CONNECTION_ERROR",
     VOICE_CONNECTION_DISCONNECT = "VOICE_CONNECTION_DISCONNECT",
@@ -66,7 +70,7 @@ export interface TrackData {
     extractor?: string
     initial?: boolean
     requested_by?: string
-    
+
     playlist?: boolean
     tracks?: TrackData[] //Playlist only
 
@@ -93,7 +97,11 @@ export interface PlayerInfo {
     volume: number
     paused: boolean
     latency: Latency
-    //tracks: Array<TrackData>
+    subscribers: {
+        self_subscription_count: number,
+        total_subscription_count: number,
+        connected: number
+    }
 }
 
 export interface Latency {
@@ -101,16 +109,16 @@ export interface Latency {
     udp: number
 }
 
-export interface QueueState {
+export interface PlayerState {
     guild_id: string;
     volume: number;
     paused: boolean;
     loop_mode: number;
 }
 
-export interface QueueStateUpdate {
-    old_state: QueueState;
-    new_state: QueueState;
+export interface PlayerStateUpdate {
+    old_state: PlayerState;
+    new_state: PlayerState;
 }
 
 export interface PlayMetaData {
@@ -182,4 +190,4 @@ export type QueueFilters = {
     chorus3d?: boolean;
     fadein?: boolean;
 };
-    
+

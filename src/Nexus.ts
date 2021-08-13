@@ -9,15 +9,18 @@ import AudioFilters from './utils/AudioFilters';
 import { inspect } from 'util';
 
 import * as Constants from './Constants';
-import { NexusStats, NexusConstructOptions, NexusPacket, WSCloseCodes, WSEvents, WSOpCodes, TrackData, SearchResult, PlayerConstructOptions, PlayerInfo, QueueState, QueueStateUpdate, LoopMode } from './types/types';
+import { NexusStats, NexusConstructOptions, NexusPacket, WSCloseCodes, WSEvents, WSOpCodes, TrackData, SearchResult, PlayerConstructOptions, PlayerInfo, PlayerState, PlayerStateUpdate, LoopMode } from './types/types';
 
 class Nexus extends EventEmitter {
     private client: Discord.Client;
     private ws: WebSocket;
     private token: string;
+    private lastPing: number;
 
     public options: NexusConstructOptions;
     public ready: boolean;
+
+    public ping: number;
 
     public filters: typeof AudioFilters;
 
@@ -62,7 +65,15 @@ class Nexus extends EventEmitter {
 
         return new Promise((res, rej) => {
             this.ws.on('error', (e) => rej(e));
-            this.ws.on('open', () => res())
+            this.ws.on('open', () => { 
+                setInterval(() => {
+                    this.ws.send(JSON.stringify({
+                        op: WSOpCodes.PING
+                    }));
+                    this.lastPing = Date.now();
+                }, 5000).unref();
+                res();
+            });
         });
     }
 
@@ -124,6 +135,9 @@ class Nexus extends EventEmitter {
                         this.emit(Constants.Events.VOICE_CONNECTION_DISCONNECT, player);
                     }
                     break;
+                }
+                case WSOpCodes.PONG: {
+                    this.ping = message.d.time - this.lastPing;
                 }
                 default: {
                     //add UNKNOWN_OP_CODE error here
@@ -191,14 +205,14 @@ class Nexus extends EventEmitter {
                     player.emit(Constants.Events.TRACK_FINISH, track);
                     break;
                 }
-                case WSEvents.QUEUE_STATE_UPDATE: {
+                case WSEvents.PLAYER_STATE_UPDATE: {
                     const player = this.players.get(message.d.new_state.guild_id);
                     if (!player) break;
 
-                    const state = message.d as QueueStateUpdate;
+                    const state = message.d as PlayerStateUpdate;
 
-                    this.emit(Constants.Events.QUEUE_STATE_UPDATE, player, state);
-                    player.emit(Constants.Events.QUEUE_STATE_UPDATE, state);
+                    this.emit(Constants.Events.PLAYER_STATE_UPDATE, player, state);
+                    player.emit(Constants.Events.PLAYER_STATE_UPDATE, state);
                     break;
                 }
                 case WSEvents.VOICE_CONNECTION_READY: {

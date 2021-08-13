@@ -4,7 +4,7 @@ import Nexus from './Nexus';
 import Track from './Track';
 
 import { TrackData, LoopMode, Latency, PlayerConstructOptions, PlayerState, PlayerStateUpdate, PlayMetaData, QueueFilters, FiltersName } from './types/types'
-import { Message, Interaction, Guild, TextChannel, VoiceChannel } from 'discord.js'
+import { Message, Interaction, Guild, VoiceChannel, TextBasedChannels } from 'discord.js'
 
 class Player extends EventEmitter {
     public tracks: Array<Track>
@@ -25,7 +25,7 @@ class Player extends EventEmitter {
     public latency: Latency
 
     public guild: Guild
-    public channel: TextChannel
+    public channel: TextBasedChannels
     public voiceChannel: VoiceChannel
 
     constructor(options: PlayerConstructOptions) {
@@ -65,9 +65,9 @@ class Player extends EventEmitter {
 
     get encoderArgs(): Array<string> {
         let arr = [];
-        
-        for (const filter of this.manager.filters){
-            if(this.filters[filter.name] == true) arr.push(filter.value);
+
+        for (const filter of this.manager.filters) {
+            if (this.filters[filter.name] == true) arr.push(filter.value);
         }
 
         return arr.length ? ['-af', arr.join(',')] : [];
@@ -108,7 +108,7 @@ class Player extends EventEmitter {
 
     async play(query: string, data?: PlayMetaData): Promise<Track> { //todo: add search (list all tracks [max-10] and ask to pick any one)
         return new Promise(async (res, rej) => {
-            if (!this.connected) await this.connect();
+            if (!this.connected) await this.connect(data?.source);
             if (!query) return rej("No query provided!");
 
             const tracks = await this.manager.search(query).then(a => a.results.map(r => new Track(r)));
@@ -157,7 +157,7 @@ class Player extends EventEmitter {
 
             this.manager.PATCH(`/api/player/${this.guild.id}`, {
                 data: {
-                    encoder_args: ['-ss', (time/1000), ...this.encoderArgs]
+                    encoder_args: ['-ss', (time / 1000), ...this.encoderArgs]
                 }
             });
 
@@ -170,14 +170,14 @@ class Player extends EventEmitter {
 
     async filter(filter: FiltersName): Promise<PlayerState | void> {
         return new Promise((res, rej) => {
-            if(!this.manager.filters[filter]) return rej("Unknown filter!");
-            this.filters[filter] = this.filters[filter] == false; 
+            if (!this.manager.filters[filter]) return rej("Unknown filter!");
+            this.filters[filter] = this.filters[filter] == false;
 
             if (!this.tracks.length) res();
 
             this.manager.PATCH(`/api/player/${this.guild.id}`, {
                 data: {
-                    encoder_args: ['-ss', (this.streamTime/1000) + 3, ...this.encoderArgs]
+                    encoder_args: ['-ss', (this.streamTime / 1000) + 3, ...this.encoderArgs]
                 }
             });
 

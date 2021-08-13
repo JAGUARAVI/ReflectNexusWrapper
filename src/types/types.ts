@@ -13,8 +13,8 @@ export interface NexusConstructOptions {
 export interface NexusPacket {
     t?: WSEvents
     op?: WSOpCodes
-    d?: { 
-        [key: string]: any 
+    d?: {
+        [key: string]: any
     }
 }
 

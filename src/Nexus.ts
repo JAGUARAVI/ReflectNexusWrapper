@@ -65,7 +65,7 @@ class Nexus extends EventEmitter {
 
         return new Promise((res, rej) => {
             this.ws.on('error', (e) => rej(e));
-            this.ws.on('open', () => { 
+            this.ws.on('open', () => {
                 setInterval(() => {
                     this.ws.send(JSON.stringify({
                         op: WSOpCodes.PING
@@ -129,7 +129,7 @@ class Nexus extends EventEmitter {
 
                     if (message.d.d.channel_id == null) {
                         const player = this.players.get(message.d.d.guild_id);
-                        if(!player) break;
+                        if (!player) break;
                         player.connected = false;
                         player.emit(Constants.Events.VOICE_CONNECTION_DISCONNECT);
                         this.emit(Constants.Events.VOICE_CONNECTION_DISCONNECT, player);

@@ -24,6 +24,6 @@ export default class Track {
         this.created_at = data.created_at;
         this.extractor = data.extractor;
         this.initial = data.initial;
-        this.config = data.config;  
+        this.config = data.config;
     }
 }

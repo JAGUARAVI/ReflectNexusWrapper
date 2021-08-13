@@ -97,6 +97,7 @@ export interface PlayerInfo {
     volume: number
     paused: boolean
     latency: Latency
+    timestamp: number
     subscribers: {
         self_subscription_count: number,
         total_subscription_count: number,

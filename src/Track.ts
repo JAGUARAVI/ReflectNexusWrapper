@@ -12,6 +12,7 @@ export default class Track {
     config?: {
         encoder_args?: string[];
         volume?: number;
+        seeked?: number;
     }
     requested_by?: string
 

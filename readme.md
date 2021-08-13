@@ -2,11 +2,7 @@
 ### A wrapper for [Reflect Nexus](https://github.com/DevSnowflake/Nexus)
 
 ## Installation
-For people using discord.js version 12
-```bash
-npm i reflect-nexus-wrapper@djs12
-```
-For people using discord.js version 13
+Requires discord.js of version 13.0.0 and above.
 ```bash
 npm i reflect-nexus-wrapper
 ```

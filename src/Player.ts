@@ -3,7 +3,7 @@ import * as Constants from './Constants';
 import Nexus from './Nexus';
 import Track from './Track';
 
-import { TrackData, LoopMode, Latency, PlayerConstructOptions, PlayerState, PlayerStateUpdate, PlayMetaData, QueueFilters, FiltersName } from './types/types'
+import { TrackData, LoopMode, Latency, PlayerConstructOptions, PlayerState, PlayerStateUpdate, PlayMetaData, QueueFilters, FiltersName, PlayerInfo } from './types/types'
 import { Message, Interaction, Guild, VoiceChannel, TextBasedChannels } from 'discord.js'
 
 class Player extends EventEmitter {
@@ -163,6 +163,7 @@ class Player extends EventEmitter {
             });
 
             this.once(Constants.Events.PLAYER_STATE_UPDATE, (state: PlayerStateUpdate) => {
+                this.tracks[0].config.seeked = time;
                 this.streamTime = time;
                 res(state.new_state);
             });
@@ -303,10 +304,11 @@ class Player extends EventEmitter {
         return await this.manager.DELETE(`/api/subscription/${this.guild.id}/${this.voiceChannel.id}`);
     }
 
-    setInfo(data: any): void {
-        this.streamTime = data.stream_time;
+    setInfo(data: PlayerInfo): void {
+        if (this.tracks[0]?.config?.seeked) this.streamTime = this.tracks[0].config.seeked + data.stream_time
+        else this.streamTime = data.stream_time;
         this.latency = data.latency;
-        this.updateTimestamp = new Date(data.timestamp)
+        this.updateTimestamp = new Date(data.timestamp);
     }
 }
 

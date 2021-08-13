@@ -103,6 +103,7 @@ class Player extends EventEmitter {
 
     async stop(): Promise<void> {
         this.connected = false;
+        this.tracks = [];
         return await this.destroySubscription();
     }
 

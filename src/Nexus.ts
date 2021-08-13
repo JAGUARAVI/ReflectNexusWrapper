@@ -131,6 +131,7 @@ class Nexus extends EventEmitter {
                         const player = this.players.get(message.d.d.guild_id);
                         if (!player) break;
                         player.connected = false;
+                        player.tracks = [];
                         player.emit(Constants.Events.VOICE_CONNECTION_DISCONNECT);
                         this.emit(Constants.Events.VOICE_CONNECTION_DISCONNECT, player);
                     }
@@ -192,13 +193,17 @@ class Nexus extends EventEmitter {
                         player.tracks.shift();
                         player.requestQueue.shift();
                         if (player.tracks.length) player._playTrack(player.tracks[0]);
+                        else {
+                            player.emit(Constants.Events.QUEUE_END);
+                            this.emit(Constants.Events.QUEUE_END, player);
+                        } 
                     } else if (player.loopMode === LoopMode.TRACK) {
                         player._playTrack(player.tracks[0]);
                     } else if (player.loopMode === LoopMode.QUEUE) {
                         player.tracks.push(player.tracks[0]);
                         player.tracks.shift();
                         player.requestQueue.shift();
-                        if (player.tracks.length) player._playTrack(player.tracks[0]);
+                        player._playTrack(player.tracks[0]);
                     }
 
                     this.emit(Constants.Events.TRACK_FINISH, player, track);
@@ -236,6 +241,7 @@ class Nexus extends EventEmitter {
                     if (!player) break;
 
                     player.connected = false;
+                    player.tracks = [];
 
                     this.emit(Constants.Events.VOICE_CONNECTION_DISCONNECT, player);
                     player.emit(Constants.Events.VOICE_CONNECTION_DISCONNECT);

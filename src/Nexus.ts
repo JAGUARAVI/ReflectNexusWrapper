@@ -116,11 +116,11 @@ class Nexus extends EventEmitter {
         const currentTime = player.streamTime || 0;
         const totalTime = player.tracks[0]?.duration || 0;
         const length = typeof options?.length === 'number' ? (options?.length <= 0 || options?.length === Infinity ? 15 : options?.length) : 15;
-    
+
         const index = Math.round((currentTime / totalTime) * length);
         const indicator = typeof options?.indicator === 'string' && options?.indicator.length > 0 ? options?.indicator : '🔘';
         const line = typeof options?.line === 'string' && options?.line.length > 0 ? options?.line : '▬';
-    
+
         if (index >= 1 && index <= length) {
             const bar = line.repeat(length - 1).split('');
             bar.splice(index, 0, indicator);
@@ -215,7 +215,8 @@ class Nexus extends EventEmitter {
                     const player = this.players.get(message.d.guild_id);
                     if (!player) break;
 
-                    const track = new Track(message.d.track as TrackData);
+                    const track = player.tracks[0];
+                    if (track?.config?.seeked) track.config.seeked = 0;
 
                     const requestData = player.requestQueue[0];
                     if (requestData.requested_by) track.requested_by = requestData.requested_by;
@@ -227,7 +228,7 @@ class Nexus extends EventEmitter {
                         else {
                             player.emit(Constants.Events.QUEUE_END);
                             this.emit(Constants.Events.QUEUE_END, player);
-                        } 
+                        }
                     } else if (player.loopMode === LoopMode.TRACK) {
                         player._playTrack(player.tracks[0]);
                     } else if (player.loopMode === LoopMode.QUEUE) {

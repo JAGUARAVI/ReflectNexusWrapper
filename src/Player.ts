@@ -255,7 +255,7 @@ class Player extends EventEmitter {
 
     async _playTrack(track: Track | TrackData, data?: PlayMetaData): Promise<Track> {
         return new Promise(async (res, rej) => {
-            if (!this.connected) await this.connect(this.source);
+            if (!this.connected) await this.connect(data?.source);
             if (!track) return rej("No track provided!");
 
             //if (data?.now) ""; Todo: Implement this

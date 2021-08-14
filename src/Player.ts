@@ -44,7 +44,7 @@ class Player extends EventEmitter {
         this.requestQueue = [];
 
         // @ts-ignore
-        this.voiceChannel = options.source.member.voice?.channel;
+        this.voiceChannel = options.source?.member?.voice?.channel;
         // @ts-ignore
         this.channel = options.source.channel;
 
@@ -60,7 +60,7 @@ class Player extends EventEmitter {
             this.filters[filter.name] = false;
         };
 
-        if (options.connect !== false) this.connect(this.source, this.voiceChannel);
+        if (options.connect !== false && this.voiceChannel) this.connect(this.source, this.voiceChannel);
     }
 
     get encoderArgs(): Array<string> {

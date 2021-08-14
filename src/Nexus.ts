@@ -215,7 +215,7 @@ class Nexus extends EventEmitter {
                     const player = this.players.get(message.d.guild_id);
                     if (!player) break;
 
-                    const track = player.tracks[0];
+                    const track = player.tracks[0] || new Track(message.d.track as TrackData);
                     if (track?.config?.seeked) track.config.seeked = 0;
 
                     const requestData = player.requestQueue[0];
